@@ -1,4 +1,4 @@
-WORK IN PROGRESS, USE AT YOUR OWN RISK
+**WORK IN PROGRESS, USE AT YOUR OWN RISK**
 
 Setup:
 pip3 install -r requirements.txt
