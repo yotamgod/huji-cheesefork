@@ -1,3 +1,4 @@
+import json.decoder
 from typing import List, Dict, Union, Optional
 
 import aiohttp
@@ -52,7 +53,9 @@ class DigmiCourseScheduleCollector(HujiDataCollector):
             'שות': 'הרצאה',
             'סדנה': 'תרגול'
         }
-        response_json = await response.json()
+
+        response_text = await response.text()
+        response_json = json.loads(response_text, strict=False)
         for lesson in response_json['lessons']:
 
             lesson_cf_format = {
