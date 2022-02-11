@@ -13,3 +13,5 @@ This:
   * Semester: a
   * Courses: 80134 67101 69174 72160 76559
 * Opens a browser with the cheesefork of these specific courses.
+
+Use '-r' flag to download all course data again.
