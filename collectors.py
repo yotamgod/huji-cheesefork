@@ -27,7 +27,7 @@ class HujiDataCollector:
 
     async def acollect(self) -> Union[List, Dict]:
         response = await self._async_session.request(self.method, self.url, data=self.data, params=self.params,
-                                                     headers=self.headers)
+                                                     headers=self.headers, verify_ssl=False)
         return await self._parse_response(response)
 
     async def _parse_response(self, response: aiohttp.ClientResponse) -> Union[List, Dict]:
