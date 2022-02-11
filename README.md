@@ -10,8 +10,7 @@ pip3 install -r requirements.txt
 This:
 * Downloads all the course info for
   * Year: 2022
-  * Semester: a
-  * Courses: 80134 67101 69174 72160 76559
+  * Semester: b
+  * Courses: 80135, 80131, 67109, 69166, 72155, 76563, 80031, 80035
 * Opens a browser with the cheesefork of these specific courses.
-
-Use '-r' flag to download all course data again.
+* Use '-r' flag to refresh (re-download) all course data again (could take some time or fail when Digmi/Huji are offline).
