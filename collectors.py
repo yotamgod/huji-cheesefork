@@ -140,12 +140,10 @@ class ShnatonExamCollector(HujiDataCollector):
                     or semester == 'סמסטר ב' and self._semester == Semester.A:
                 continue
 
-            if '3' not in moed:
-                continue
-            if 'חלקי א' in moed:
+            if 'חלקי א' in moed or 'סופי א' in moed:
                 exams['a'] = exam_date.replace('-', '.')
 
-            elif 'חלקי ב' in moed:
+            elif 'חלקי ב' in moed or 'סופי ב' in moed:
                 exams['b'] = exam_date.replace('-', '.')
 
         return exams
