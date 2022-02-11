@@ -5,10 +5,14 @@ import json
 import logging
 import os
 import time
+from urllib.parse import urljoin
 
 import aiohttp as aiohttp
+import requests
 from mitmproxy.options import Options
 from mitmproxy.tools.dump import DumpMaster
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.remote.command import Command as SeleniumCommand
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium import webdriver
 
@@ -20,6 +24,7 @@ from utils import Semester
 
 COURSE_FILE_TEMPLATE = '{course}_{year}_{semester}.txt'
 DOWNLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'downloaded_courses')
+CHROME_PROFILE_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'chrome_profile')
 PROXY_PORT = 8080
 CHEESEFORK_URL = 'https://cheesefork.cf/'
 
@@ -84,26 +89,40 @@ def raise_browser(proxy: DumpMaster):
     print('Starting Browser')
     chrome_options = webdriver.ChromeOptions()
     chrome_options.add_argument(f'--proxy-server=127.0.0.1:{PROXY_PORT}')
-    chrome = webdriver.Chrome(ChromeDriverManager(log_level=logging.ERROR, print_first_line=False).install(),
-                              options=chrome_options)
-    chrome.get(CHEESEFORK_URL)
+    chrome_options.add_argument(f"user-data-dir={CHROME_PROFILE_FOLDER}")
+    chrome_options.add_argument('--ignore-ssl-errors=yes')
+    chrome_options.add_argument('--ignore-certificate-errors')
+    service = Service(ChromeDriverManager(log_level=logging.ERROR, print_first_line=False).install())
+    chrome = webdriver.Chrome(service=service, options=chrome_options)
 
     # TODO: This is ugly but whatever
-    chrome.command_executor.set_timeout(1)
-    while True:
-        try:
-            chrome.current_window_handle
-        except Exception:
-            chrome.quit()
-            proxy.shutdown()
-            return
+    window_handle_method, window_handle_path_template = chrome.command_executor._commands[
+        SeleniumCommand.W3C_GET_CURRENT_WINDOW_HANDLE]  # type: str, str
+    session_id = chrome.session_id
+    window_handle_path = window_handle_path_template.replace('$sessionId', session_id)
+    window_handle_url = urljoin(chrome.command_executor._url, window_handle_path)
 
+    def _is_browser_open():
+        try:
+            requests.request(window_handle_method, window_handle_url, timeout=1)
+            return True
+        except Exception:
+            return False
+
+    chrome.get(CHEESEFORK_URL)
+
+    while _is_browser_open():
         time.sleep(1)
+
+    print('Chrome quit. Closing app (this may take a bit).')
+    chrome.quit()
+    print('Chrome stopped. Shutting down proxy.')
+    proxy.shutdown()
+    print('Proxy shutdown.')
+    return
 
 
 def raise_proxy_and_browser(replacement_value: str):
-    # from mitmproxy.tools.main import run
-    # run(CFPatchMaster, )
     try:
         loop = asyncio.get_event_loop()
     except RuntimeError:
