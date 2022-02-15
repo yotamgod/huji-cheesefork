@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>HujiCheese</title>
+    <script type="application/javascript" src="../static/scripts.js"></script>
+    <style>
+        #myInput {
+            /*background-image: url('/css/searchicon.png'); !* Add a search icon to input *!*/
+            background-position: 10px 12px; /* Position the search icon */
+            background-repeat: no-repeat; /* Do not repeat the icon image */
+            width: 100%; /* Full-width */
+            font-size: 16px; /* Increase font-size */
+            padding: 12px 20px 12px 40px; /* Add some padding */
+            border: 1px solid #ddd; /* Add a grey border */
+            margin-bottom: 12px; /* Add some space below the input */
+        }
+
+        .courseUls {
+            /* Remove default list styling */
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .courseUls li label {
+            border: 1px solid #ddd; /* Add a border to all links */
+            margin-top: -1px; /* Prevent double borders */
+            background-color: #f6f6f6; /* Grey background color */
+            padding: 12px; /* Add some padding */
+            text-decoration: none; /* Remove default text underline */
+            font-size: 18px; /* Increase the font-size */
+            color: black; /* Add a black text color */
+            display: block; /* Make it into a block element to fill the whole list */
+        }
+
+        .courseUls li label:hover:not(.header) {
+            background-color: #eee; /* Add a hover effect to all links, except for headers */
+        }
+
+        #uncheckedUl {
+            width: 49%;
+            float: left;
+        }
+
+        #checkedUl {
+            width: 49%;
+            float: right;
+        }
+    </style>
+    <meta charset="UTF-8">
+</head>
+<body onload="onLoad()">
+<div id="topBar">
+    <label>
+        Semester
+        <select name="semester" form="chosenCoursesForm">
+            <option>a</option>
+            <option>b</option>
+        </select>
+    </label>
+    <label>
+        Re-download all course data?
+        <input type="checkbox" name="recreate" form="chosenCoursesForm">
+    </label>
+    <input type="submit" value="Submit" form="chosenCoursesForm">
+
+</div>
+<label for="myInput"></label>
+<input type="text" id="myInput" onkeyup="myFunction()"
+       placeholder="Search for names..">
+
+<div id="uncheckedUl">
+    <ul id="myUL" class="courseUls">
+        {% for course in courses %}
+        <li id="unchecked_{{course.id}}"
+            onchange="checkboxChange(this.id)">
+            <label>
+                <input type="checkbox">
+                {{course.id}} - {{course.value}}
+            </label></li>
+        {% endfor %}
+    </ul>
+</div>
+<form id="chosenCoursesForm" method="post" onsubmit="onSubmitFunc()">
+
+    <div id="checkedUl">
+
+        <ul id="checkedCoursesList" class="courseUls">
+            {% for course in courses %}
+            <li hidden="hidden" id="checked_{{course.id}}"
+                onchange="checkboxChange(this.id)">
+                <label>
+                    <input type="checkbox" id="{{course.id}}" name="courses"
+                           value="{{course.id}}">
+                    {{course.id}} - {{course.value}}
+                </label>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</form>
+</body>
+</html>

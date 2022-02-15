@@ -16,7 +16,8 @@ from selenium.webdriver.remote.command import Command as SeleniumCommand
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium import webdriver
 
-from collectors import DigmiCourseScheduleCollector, ShnatonSyllabusCollector, ShnatonExamCollector, \
+from collectors import DigmiCourseScheduleCollector, ShnatonSyllabusCollector, \
+    ShnatonExamCollector, \
     ShantonGeneralInfoCollector
 from proxy import ReplaceCoursesJson
 from utils import Semester
@@ -55,8 +56,10 @@ async def download_single_course_json(session: aiohttp.ClientSession, course: st
         "תרגיל": "2"
     }
     if exams:
-        general['מועד א'] = f"בתאריך {exams['a'].replace('-', '.')} יום ה"
-        general['מועד ב'] = f"בתאריך {exams['b'].replace('-', '.')} יום ו"
+        if 'a' in exams:
+            general['מועד א'] = f"בתאריך {exams['a'].replace('-', '.')} יום ה"
+        if 'b' in exams:
+            general['מועד ב'] = f"בתאריך {exams['b'].replace('-', '.')} יום ו"
 
     file_name = COURSE_FILE_TEMPLATE.format(course=course, year=year, semester=int(semester))
     with open(os.path.join(DOWNLOAD_FOLDER, file_name), 'w') as f:
@@ -176,7 +179,6 @@ def main():
         asyncio.run(
             download_courses(course_ids_to_download, semester=args.semester, year=args.year)
         )
-
     if args.download_only:
         return
 

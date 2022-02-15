@@ -19,19 +19,40 @@ class HujiDataCollector:
         headers = headers or {}
         self.headers = {**self._get_default_headers(), **headers}
 
-        self._async_session: Optional[aiohttp.ClientSession] = async_session or aiohttp.ClientSession()
+        self._async_session: Optional[
+            aiohttp.ClientSession] = async_session or aiohttp.ClientSession()
 
     def _get_default_headers(self) -> dict:
-        return {'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
-                              'Chrome/93.0.4577.63 Safari/537.36'}
+        return {
+            'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
+                          'AppleWebKit/537.36 (KHTML, like Gecko) '
+                          'Chrome/93.0.4577.63 Safari/537.36'}
 
     async def acollect(self) -> Union[List, Dict]:
-        response = await self._async_session.request(self.method, self.url, data=self.data, params=self.params,
-                                                     headers=self.headers, verify_ssl=False)
+        response = await self._async_session.request(self.method, self.url,
+                                                     data=self.data,
+                                                     params=self.params,
+                                                     headers=self.headers,
+                                                     verify_ssl=False)
         return await self._parse_response(response)
 
     async def _parse_response(self, response: aiohttp.ClientResponse) -> Union[List, Dict]:
         raise NotImplementedError()
+
+
+class DigmiAllCoursesCollector(HujiDataCollector):
+    DIGMI_URL_TEMPLATE = 'https://digmi.org/huji/courses_{year}.json'
+
+    def __init__(self, year: int, headers: dict = None,
+                 data: dict = None, params: dict = None,
+                 async_session: aiohttp.ClientSession = None):
+        super().__init__('GET', self.DIGMI_URL_TEMPLATE.format(year=year),
+                         headers, data, params, async_session)
+
+    async def _parse_response(self, response: aiohttp.ClientResponse
+                              ) -> Union[List, Dict]:
+        response_text = await response.text()
+        return json.loads(response_text, strict=False)
 
 
 class DigmiCourseScheduleCollector(HujiDataCollector):
