@@ -47,6 +47,7 @@ class HujiCheese:
             result = await DigmiAllCoursesCollector(year).acollect()
             return render_template("index.html", courses=result)
 
+        # Collect form data
         semester = Semester.from_string(request.form.get('semester'))
         courses = request.form.getlist('courses')
         should_recreate = True if request.form.get('recreate') else False
@@ -93,14 +94,16 @@ class HujiCheese:
         return redirect(CHEESEFORK_URL)
 
     def start(self):
-        flask_thread = Thread(target=self._flask_app.run, args=('localhost', 5000), daemon=True)
+        """
+        Start the flask server in a separate thread and the proxied browser.
+        """
+        flask_thread = Thread(target=self._flask_app.run, args=(self._flask_host, self._flask_port), daemon=True)
         flask_thread.start()
         self._proxied_browser.run()
 
 
 def main():
-    hc = HujiCheese()
-    hc.start()
+    HujiCheese().start()
 
 
 if __name__ == '__main__':

@@ -14,15 +14,12 @@ from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.remote.command import Command as SeleniumCommand
 
 PROXY_PORT = 8080
-COURSE_FILE_TEMPLATE = '{course}_{year}_{semester}.txt'
-DOWNLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'downloaded_courses')
 CHROME_PROFILE_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'chrome_profile')
-CHEESEFORK_URL = 'https://cheesefork.cf/'
 
 
 class ReplaceCoursesJson:
     """
-    Addon to replace the courses json cheesefork receives
+    Mitmproxy addon to replace the courses json Cheesefork receives
     """
     name = 'course_replacer'
 
@@ -42,22 +39,28 @@ class ReplaceCoursesJson:
             try:
                 flow.response.text = self._replacement_value
             except Exception:
-                logging.exception('Something happened')
+                logging.exception('Something happened when replacing course json.')
 
 
 class CheeseProxiedBrowser:
-    def __init__(self, host='127.0.0.1', port=PROXY_PORT, replacement_value=None, initial_page=None):
-        self._proxy_host = host
-        self._proxy_port = port
-        self._opts = None
+    def __init__(self, proxy_host='127.0.0.1', proxy_port=PROXY_PORT, replacement_value: str = None,
+                 initial_page: str = None, replacement_domain: str = None):
+        # Proxy
+        self._proxy_host = proxy_host
+        self._proxy_port = proxy_port
+        self._opts: Optional[Options] = None
         self._proxy: Optional[DumpMaster] = None
         self.replacement_value = replacement_value
         self.replacement_domain = replacement_domain
 
+        # Browser
         self._browser: Optional[webdriver.Chrome] = None
         self._initial_page = initial_page
 
     def activate_course_replacement(self):
+        """
+        Loads the course replacement json (if it isn't already loaded).
+        """
         if self._proxy.addons.get(ReplaceCoursesJson.name):
             # Already activated, so do nothing
             return
@@ -65,6 +68,9 @@ class CheeseProxiedBrowser:
         self._proxy.addons.add(ReplaceCoursesJson(self.replacement_value, self.replacement_domain))
 
     def deactivate_course_replacement(self):
+        """
+        Removes the course replacement json (if it exists).
+        """
         replacer_addon = self._proxy.addons.get(ReplaceCoursesJson.name)
         if not replacer_addon:
             # Addon not there so do nothing
@@ -77,7 +83,10 @@ class CheeseProxiedBrowser:
         self.activate_course_replacement()
 
     def _raise_browser(self):
-        print('Starting Browser')
+        """
+        Raises a browser behind the mitmproxy server (downloading the chrome webdriver if needed).
+        Also gets the initial page if specified.
+        """
         chrome_options = webdriver.ChromeOptions()
         chrome_options.add_argument(f'--proxy-server=127.0.0.1:{PROXY_PORT}')
         chrome_options.add_argument(f"user-data-dir={CHROME_PROFILE_FOLDER}")
@@ -89,18 +98,32 @@ class CheeseProxiedBrowser:
             self._browser.get(self._initial_page)
 
     def get_page(self, page: str):
+        """
+        Makes the selenium controlled browser "get" a page.
+        """
         assert self._browser is not None, 'Browser must be run first.'
         self._browser.get(page)
 
     async def _browser_poller(self):
+        """
+        Polls to see if the browser is still open (or was close by the user).
+        If it is closed, kill the remaining chromedriver.exe process and the proxy as well.
+        """
+
         assert self._browser, 'Browser must be run first.'
+
+        # Send the browser a "keepalive" every second.
+        # If the request hangs, it means the browser is probably closed.
         async with aiohttp.ClientSession() as session:
+
+            # Collect window handle url to send keepalives to
             window_handle_method, window_handle_path_template = self._browser.command_executor._commands[
                 SeleniumCommand.W3C_GET_CURRENT_WINDOW_HANDLE]  # type: str, str
             session_id = self._browser.session_id
             window_handle_path = window_handle_path_template.replace('$sessionId', session_id)
             window_handle_url = urljoin(self._browser.command_executor._url, window_handle_path)
 
+            # Sub method to poll the browser.
             async def _is_browser_open():
                 try:
                     await session.request(window_handle_method, window_handle_url, timeout=1)
@@ -111,7 +134,7 @@ class CheeseProxiedBrowser:
             while await _is_browser_open():
                 await asyncio.sleep(1)
 
-        print('Chrome quit. Closing app (this may take a bit).')
+        print('Chrome quit. Closing app.')
         self._browser.service.process.kill()
         self._proxy.shutdown()
 
