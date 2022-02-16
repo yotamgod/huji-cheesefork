@@ -2,6 +2,7 @@ import datetime
 import json
 import os
 from threading import Thread
+from urllib.parse import urlsplit
 
 from flask import Flask, render_template, request, redirect
 
@@ -19,17 +20,17 @@ class HujiCheese:
     """
     A class that controls the flask app and the proxied browser
     """
-    def __init__(self):
-        self._proxied_browser = CheeseProxiedBrowser(initial_page='http://localhost:5000')
-        self._flask_app = Flask(__name__)
-        self._add_endpoints()
 
-    def _add_endpoints(self):
-        """
-        Add endpoints to flask app
-        """
+    def __init__(self, flask_host: str = 'localhost', flask_port: int = 5000):
+        self._proxied_browser = CheeseProxiedBrowser(initial_page=f'http://{flask_host}:{flask_port}',
+                                                     replacement_domain=urlsplit(CHEESEFORK_URL).hostname)
+
+        # Configure flask app and endpoints
+        self._flask_app = Flask(__name__)
         self._flask_app.add_url_rule('/year/<year>', view_func=self.year_index, methods=['GET', 'POST'])
         self._flask_app.add_url_rule('/', view_func=self.index, methods=['GET'])
+        self._flask_host = flask_host
+        self._flask_port = flask_port
 
     async def index(self):
         """

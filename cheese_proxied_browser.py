@@ -26,10 +26,18 @@ class ReplaceCoursesJson:
     """
     name = 'course_replacer'
 
-    def __init__(self, replacement_value: str):
+    def __init__(self, replacement_value: str, domain: str = None):
+        """
+        :param replacement_value: the value to insert instead of the original
+        :param domain: the domain (example.com) to make the courses replacement
+        """
         self._replacement_value = replacement_value
+        self._domain = domain
 
     def response(self, flow: HTTPFlow):
+        if self._domain is not None and flow.request.host != self._domain:
+            return
+
         if 'courses_' in flow.request.url and self._replacement_value:
             try:
                 flow.response.text = self._replacement_value
@@ -44,6 +52,7 @@ class CheeseProxiedBrowser:
         self._opts = None
         self._proxy: Optional[DumpMaster] = None
         self.replacement_value = replacement_value
+        self.replacement_domain = replacement_domain
 
         self._browser: Optional[webdriver.Chrome] = None
         self._initial_page = initial_page
@@ -53,7 +62,7 @@ class CheeseProxiedBrowser:
             # Already activated, so do nothing
             return
 
-        self._proxy.addons.add(ReplaceCoursesJson(self.replacement_value))
+        self._proxy.addons.add(ReplaceCoursesJson(self.replacement_value, self.replacement_domain))
 
     def deactivate_course_replacement(self):
         replacer_addon = self._proxy.addons.get(ReplaceCoursesJson.name)
