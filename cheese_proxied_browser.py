@@ -13,7 +13,8 @@ from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.remote.command import Command as SeleniumCommand
 
-PROXY_PORT = 8080
+DEFAULT_PROXY_PORT = 8080
+DEFAULT_PROXY_HOST = '127.0.0.1'
 CHROME_PROFILE_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'chrome_profile')
 
 
@@ -43,7 +44,7 @@ class ReplaceCoursesJson:
 
 
 class CheeseProxiedBrowser:
-    def __init__(self, proxy_host='127.0.0.1', proxy_port=PROXY_PORT, replacement_value: str = None,
+    def __init__(self, proxy_host=DEFAULT_PROXY_HOST, proxy_port=DEFAULT_PROXY_PORT, replacement_value: str = None,
                  initial_page: str = None, replacement_domain: str = None):
         # Proxy
         self._proxy_host = proxy_host
@@ -88,7 +89,7 @@ class CheeseProxiedBrowser:
         Also gets the initial page if specified.
         """
         chrome_options = webdriver.ChromeOptions()
-        chrome_options.add_argument(f'--proxy-server=127.0.0.1:{PROXY_PORT}')
+        chrome_options.add_argument(f'--proxy-server=127.0.0.1:{DEFAULT_PROXY_PORT}')
         chrome_options.add_argument(f"user-data-dir={CHROME_PROFILE_FOLDER}")
         chrome_options.add_argument('--ignore-ssl-errors=yes')
         chrome_options.add_argument('--ignore-certificate-errors')

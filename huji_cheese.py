@@ -8,12 +8,10 @@ from flask import Flask, render_template, request, redirect
 
 from cheese_proxied_browser import CheeseProxiedBrowser
 from collectors import DigmiAllCoursesCollector
-from main import download_courses
+from downloader import download_courses, DOWNLOAD_FOLDER, COURSE_FILE_TEMPLATE
 from utils import Semester
 
-COURSE_FILE_TEMPLATE = '{course}_{year}_{semester}.txt'
 CHEESEFORK_URL = 'https://cheesefork.cf/'
-DOWNLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'downloaded_courses')
 
 
 class HujiCheese:
