@@ -9,6 +9,7 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+  workflow_dispatch:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -31,12 +32,13 @@ jobs:
       - name: Install requirements and PyInstaller
         run: |
           python -m pip install --upgrade pip
+          pip install wheel setuptools
           pip install -r requirements.txt
           pip install pyinstaller
-      - name: Build package and zip output
+      - name: Run PyInstaller
         run: |
           pyinstaller --noconfirm --onedir --console --add-data "templates;templates/" --add-data "static;static/"  "huji_cheese.py"
       - name: Upload artifact
         uses: actions/upload-artifact@v2
         with:
-          path: output
+          path: dist
