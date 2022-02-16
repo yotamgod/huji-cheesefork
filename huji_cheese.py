@@ -5,33 +5,43 @@ from threading import Thread
 
 from flask import Flask, render_template, request, redirect
 
-from cheese_proxy import CheeseProxiedBrowser
+from cheese_proxied_browser import CheeseProxiedBrowser
 from collectors import DigmiAllCoursesCollector
 from main import download_courses
 from utils import Semester
 
 COURSE_FILE_TEMPLATE = '{course}_{year}_{semester}.txt'
-DOWNLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'downloaded_courses')
-CHROME_PROFILE_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'chrome_profile')
-PROXY_PORT = 8080
 CHEESEFORK_URL = 'https://cheesefork.cf/'
+DOWNLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'downloaded_courses')
 
 
 class HujiCheese:
+    """
+    A class that controls the flask app and the proxied browser
+    """
     def __init__(self):
         self._proxied_browser = CheeseProxiedBrowser(initial_page='http://localhost:5000')
         self._flask_app = Flask(__name__)
         self._add_endpoints()
 
     def _add_endpoints(self):
+        """
+        Add endpoints to flask app
+        """
         self._flask_app.add_url_rule('/year/<year>', view_func=self.year_index, methods=['GET', 'POST'])
         self._flask_app.add_url_rule('/', view_func=self.index, methods=['GET'])
 
     async def index(self):
+        """
+        Main page. Redirects to the year page.
+        """
         year = datetime.date.today().year
         return redirect(f'/year/{year}')
 
     async def year_index(self, year):
+        """
+        The year page - includes all the courses for a certain year.
+        """
         if request.method == 'GET':
             result = await DigmiAllCoursesCollector(year).acollect()
             return render_template("index.html", courses=result)
@@ -75,7 +85,7 @@ class HujiCheese:
         # Build javascript variable
         js_variable = f'var courses_from_rishum = {json.dumps(list(course_data.values()), ensure_ascii=False)}'
 
-        # Raise selenium/mitmproxy with Cheesefork
+        # Reload the addon that alters the courses in Cheesefork.
         self._proxied_browser.replacement_value = js_variable
         self._proxied_browser.reload_course_replacement()
 
