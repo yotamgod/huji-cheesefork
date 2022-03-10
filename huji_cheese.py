@@ -8,10 +8,11 @@ from flask import Flask, render_template, request, redirect
 
 from cheese_proxied_browser import CheeseProxiedBrowser
 from collectors import DigmiAllCoursesCollector
-from downloader import download_courses, DOWNLOAD_FOLDER, COURSE_FILE_TEMPLATE
+from downloader import download_courses, COURSE_FILE_TEMPLATE
 from utils import Semester
 
 CHEESEFORK_URL = 'https://cheesefork.cf/'
+DOWNLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'downloaded_courses')
 
 
 class HujiCheese:
@@ -71,7 +72,7 @@ class HujiCheese:
 
         # Download missing courses
         if course_ids_to_download:
-            await download_courses(course_ids_to_download, semester=semester, year=year)
+            await download_courses(course_ids_to_download, semester=semester, year=year, output_dir=DOWNLOAD_FOLDER)
 
         # Read all courses from files
         course_data = {}
