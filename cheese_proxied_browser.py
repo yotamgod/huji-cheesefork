@@ -93,7 +93,7 @@ class CheeseProxiedBrowser:
         chrome_options.add_argument(f"user-data-dir={CHROME_PROFILE_FOLDER}")
         chrome_options.add_argument('--ignore-ssl-errors=yes')
         chrome_options.add_argument('--ignore-certificate-errors')
-        service = Service(ChromeDriverManager(log_level=logging.ERROR, print_first_line=False).install())
+        service = Service(ChromeDriverManager().install())
         self._browser = webdriver.Chrome(service=service, options=chrome_options)
         if self._initial_page is not None:
             self._browser.get(self._initial_page)
