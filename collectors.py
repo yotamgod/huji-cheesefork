@@ -72,7 +72,9 @@ class DigmiCourseScheduleCollector(HujiDataCollector):
             'תרג': 'תרגול',
             'מעב': 'מעבדה',
             'שות': 'הרצאה',
-            'סדנה': 'תרגול'
+            'סדנה': 'תרגול',
+            'הדר': 'הדרכה',
+            'סמ': 'סמ'
         }
 
         response_text = await response.text()
