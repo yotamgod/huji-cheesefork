@@ -104,6 +104,10 @@ async def download_courses(courses, semester: Semester, year: int, output_dir: s
         failed_course_ids = [course_id for result, course_id in zip(results, courses)
                              if isinstance(result, Exception)]
 
+        if len(failed_course_ids) == len(courses):
+            logging.error("Failed to download all courses.")
+            raise RuntimeError("Failed to download all courses.")
+
         logging.info(f'Successfully downloaded {len(results) - len(failed_course_ids)} courses.')
         if failed_course_ids:
             logging.error(f'Failed to download {len(failed_course_ids)} courses: {failed_course_ids}')
